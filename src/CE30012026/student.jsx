@@ -1,5 +1,41 @@
 // src/App.js
 import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  Typography,
+  Paper,
+  Grid,
+  IconButton,
+  Divider,
+  Container,
+  Card,
+  CardContent,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tabs,
+  Tab,
+  Badge,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
+import SchoolIcon from "@mui/icons-material/School";
+import PersonIcon from "@mui/icons-material/Person";
+import BookIcon from "@mui/icons-material/Book";
 
 /*
  Student object shape:
@@ -16,19 +52,26 @@ const initialStudents = [
     id: 1,
     name: "Alice",
     grade: "A",
-    subjects: ["Math", "Physics"]
+    subjects: ["Math", "Physics", "Chemistry"]
   },
   {
     id: 2,
     name: "Bob",
     grade: "C",
     subjects: ["English", "History"]
+  },
+  {
+    id: 3,
+    name: "Charlie",
+    grade: "B",
+    subjects: ["Math", "Biology"]
   }
 ];
 
 function Std() {
   const [students, setStudents] = useState(initialStudents);
   const [selectedId, setSelectedId] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   // Add a new student
   function addStudent(name, grade, subjectsText) {
@@ -46,6 +89,7 @@ function Std() {
     // immutably add the student (new array)
     setStudents(prev => [newStudent, ...prev]);
     setSelectedId(newStudent.id);
+    setOpenDialog(false);
   }
 
   // Delete student by id
@@ -62,22 +106,132 @@ function Std() {
   }
 
   const selectedStudent = students.find(s => s.id === selectedId) || null;
+  const gradeStats = {
+    A: students.filter(s => s.grade === 'A').length,
+    B: students.filter(s => s.grade === 'B').length,
+    C: students.filter(s => s.grade === 'C').length,
+    D: students.filter(s => s.grade === 'D').length,
+    E: students.filter(s => s.grade === 'E').length,
+  };
 
   return (
-    <div style={styles.app}>
-      <h1>Student Grade Management</h1>
-      <div style={styles.container}>
-        <div style={styles.left}>
-          <StudentForm onAdd={addStudent} />
-          <StudentList
-            students={students}
-            onSelect={setSelectedId}
-            onDelete={deleteStudent}
-            selectedId={selectedId}
-          />
-        </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <SchoolIcon sx={{ fontSize: 40 }} />
+          Student Grade Management System
+        </Typography>
+        <Typography variant="body1" color="textSecondary" gutterBottom>
+          Manage student grades and track their academic progress
+        </Typography>
+      </Box>
 
-        <div style={styles.right}>
+      {/* Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography color="textSecondary" gutterBottom>
+                Total Students
+              </Typography>
+              <Typography variant="h4">{students.length}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        {Object.entries(gradeStats).map(([grade, count]) => (
+          <Grid item xs={6} sm={6} md={2} key={grade}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', p: 1.5 }}>
+                <Typography color="textSecondary" variant="body2" gutterBottom>
+                  Grade {grade}
+                </Typography>
+                <Typography variant="h5">{count}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        {/* Left Column - Form & List */}
+        <Grid item xs={12} md={5}>
+          {/* Add Student Button */}
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<AddIcon />}
+            onClick={() => setOpenDialog(true)}
+            sx={{ mb: 2, py: 1.5 }}
+          >
+            Add New Student
+          </Button>
+
+          {/* Student List */}
+          <Paper sx={{ overflow: 'hidden' }}>
+            <List>
+              {students.map((student, index) => (
+                <Box key={student.id}>
+                  <ListItem
+                    disablePadding
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        onClick={() => deleteStudent(student.id)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemButton
+                      selected={student.id === selectedId}
+                      onClick={() => setSelectedId(student.id)}
+                    >
+                      <Badge
+                        badgeContent={student.subjects.length}
+                        color="primary"
+                        sx={{ mr: 1.5 }}
+                      >
+                        <PersonIcon />
+                      </Badge>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {student.name}
+                            <Chip
+                              label={`Grade ${student.grade}`}
+                              size="small"
+                              color={
+                                student.grade === 'A'
+                                  ? 'success'
+                                  : student.grade === 'B'
+                                    ? 'info'
+                                    : student.grade === 'C'
+                                      ? 'warning'
+                                      : 'error'
+                              }
+                              variant="outlined"
+                            />
+                          </Box>
+                        }
+                        secondary={`${student.subjects.length} subjects`}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  {index < students.length - 1 && <Divider />}
+                </Box>
+              ))}
+              {students.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No students yet. Add one to get started!" />
+                </ListItem>
+              )}
+            </List>
+          </Paper>
+        </Grid>
+
+        {/* Right Column - Details */}
+        <Grid item xs={12} md={7}>
           {selectedStudent ? (
             <StudentDetails
               student={selectedStudent}
@@ -85,85 +239,116 @@ function Std() {
               onDelete={() => deleteStudent(selectedStudent.id)}
             />
           ) : (
-            <div style={styles.placeholder}>
-              Pick a student to view details or add a new student on the left.
-            </div>
+            <Paper sx={{ p: 4, textAlign: 'center', minHeight: 400, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <SchoolIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, mx: 'auto' }} />
+              <Typography variant="h6" color="textSecondary">
+                Select a student or add a new one
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                Click on a student from the list to view and manage their details
+              </Typography>
+            </Paper>
           )}
-        </div>
-      </div>
-    </div>
+        </Grid>
+      </Grid>
+
+      {/* Add Student Dialog */}
+      <AddStudentDialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onAdd={addStudent}
+      />
+    </Container>
   );
 }
 
-/* StudentForm: add new student */
-function StudentForm({ onAdd }) {
+/* Add Student Dialog Component */
+function AddStudentDialog({ open, onClose, onAdd }) {
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("A");
-  const [subjects, setSubjects] = useState(""); // comma separated
+  const [subjects, setSubjects] = useState("");
 
-  function handleAdd(e) {
-    e.preventDefault();
+  const handleAdd = () => {
     onAdd(name, grade, subjects);
     setName("");
     setGrade("A");
     setSubjects("");
-  }
+  };
 
   return (
-    <form onSubmit={handleAdd} style={styles.form}>
-      <h3>Add Student</h3>
-      <input
-        placeholder="Name"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        style={styles.input}
-      />
-      <select value={grade} onChange={e => setGrade(e.target.value)} style={styles.input}>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-      </select>
-      <input
-        placeholder="Subjects (comma separated)"
-        value={subjects}
-        onChange={e => setSubjects(e.target.value)}
-        style={styles.input}
-      />
-      <button type="submit" style={styles.button}>Add Student</button>
-    </form>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ fontWeight: 'bold' }}>Add New Student</DialogTitle>
+      <DialogContent sx={{ pt: 2 }}>
+        <TextField
+          fullWidth
+          label="Student Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={{ mb: 2 }}
+          placeholder="e.g., John Doe"
+        />
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Grade</InputLabel>
+          <Select value={grade} onChange={(e) => setGrade(e.target.value)} label="Grade">
+            <MenuItem value="A">A - Excellent</MenuItem>
+            <MenuItem value="B">B - Good</MenuItem>
+            <MenuItem value="C">C - Average</MenuItem>
+            <MenuItem value="D">D - Below Average</MenuItem>
+            <MenuItem value="E">E - Poor</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          fullWidth
+          label="Subjects"
+          value={subjects}
+          onChange={(e) => setSubjects(e.target.value)}
+          placeholder="e.g., Math, Physics, Chemistry"
+          helperText="Comma-separated subject names"
+        />
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleAdd} variant="contained">
+          Add Student
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 
 /* StudentList: shows list + delete */
 function StudentList({ students, onSelect, onDelete, selectedId }) {
   return (
-    <div>
-      <h3>Students ({students.length})</h3>
-      <ul style={styles.list}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Students ({students.length})
+      </Typography>
+      <List>
         {students.map(s => (
-          <li
+          <ListItem
             key={s.id}
-            style={{
-              ...styles.listItem,
-              background: s.id === selectedId ? "#eef" : "white"
-            }}
+            secondaryAction={
+              <Box>
+                <Button size="small" onClick={() => onSelect(s.id)} sx={{ mr: 1 }}>
+                  View
+                </Button>
+                <IconButton edge="end" onClick={() => onDelete(s.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            }
+            sx={{ bgcolor: s.id === selectedId ? 'action.selected' : 'inherit' }}
           >
-            <div style={{flex:1}}>
-              <strong>{s.name}</strong> <span>({s.grade})</span>
-              <div style={styles.smallText}>
-                Subjects: {s.subjects.length ? s.subjects.join(", ") : "—"}
-              </div>
-            </div>
-            <div style={styles.listButtons}>
-              <button onClick={() => onSelect(s.id)} style={styles.smallBtn}>View</button>
-              <button onClick={() => onDelete(s.id)} style={styles.smallBtnDanger}>Delete</button>
-            </div>
-          </li>
+            <ListItemButton onClick={() => onSelect(s.id)}>
+              <ListItemText
+                primary={`${s.name} (${s.grade})`}
+                secondary={`Subjects: ${s.subjects.length ? s.subjects.join(", ") : "—"}`}
+              />
+            </ListItemButton>
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Paper>
   );
 }
 
@@ -178,7 +363,7 @@ function StudentDetails({ student, onUpdate, onDelete }) {
     setEditingName(student.name);
     setEditingGrade(student.grade);
     setNewSubject("");
-  }, [student.id]);
+  }, [student.id, student.name, student.grade]);
 
   function addSubject() {
     const sub = newSubject.trim();
@@ -204,171 +389,75 @@ function StudentDetails({ student, onUpdate, onDelete }) {
   }
 
   return (
-    <div>
-      <h2>Details</h2>
-      <div style={styles.detailsRow}>
-        <label style={styles.label}>Name:</label>
-        <input value={editingName} onChange={e => setEditingName(e.target.value)} style={styles.inputSmall}/>
-        <button onClick={saveName} style={styles.smallBtn}>Save</button>
-      </div>
-
-      <div style={styles.detailsRow}>
-        <label style={styles.label}>Grade:</label>
-        <select value={editingGrade} onChange={saveGrade} style={styles.inputSmall}>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
-          <option value="E">E</option>
-        </select>
-      </div>
-
-      <div style={{marginTop:12}}>
-        <h4>Subjects</h4>
-        <ul>
-          {student.subjects.map((sub, idx) => (
-            <li key={idx} style={styles.subjectItem}>
-              {sub}
-              <button onClick={() => removeSubject(idx)} style={styles.smallBtnDanger}>Remove</button>
-            </li>
-          ))}
-          {student.subjects.length === 0 && <div style={styles.smallText}>No subjects yet.</div>}
-        </ul>
-
-        <div style={{marginTop:8}}>
-          <input
-            placeholder="New subject"
-            value={newSubject}
-            onChange={e => setNewSubject(e.target.value)}
-            style={styles.input}
-          />
-          <button onClick={addSubject} style={styles.button}>Add Subject</button>
-        </div>
-      </div>
-
-      <div style={{marginTop: 18}}>
-        <button onClick={onDelete} style={styles.buttonDanger}>Delete Student</button>
-      </div>
-    </div>
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        Student Details
+      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Name"
+          value={editingName}
+          onChange={e => setEditingName(e.target.value)}
+          fullWidth
+          sx={{ mb: 1 }}
+        />
+        <Button onClick={saveName} variant="outlined" size="small">
+          Save Name
+        </Button>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Grade</InputLabel>
+          <Select value={editingGrade} onChange={saveGrade} label="Grade">
+            <MenuItem value="A">A</MenuItem>
+            <MenuItem value="B">B</MenuItem>
+            <MenuItem value="C">C</MenuItem>
+            <MenuItem value="D">D</MenuItem>
+            <MenuItem value="E">E</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="h6" gutterBottom>
+        Subjects
+      </Typography>
+      <List>
+        {student.subjects.map((sub, idx) => (
+          <ListItem
+            key={idx}
+            secondaryAction={
+              <IconButton edge="end" onClick={() => removeSubject(idx)}>
+                <DeleteIcon />
+              </IconButton>
+            }
+          >
+            <ListItemText primary={sub} />
+          </ListItem>
+        ))}
+        {student.subjects.length === 0 && (
+          <ListItem>
+            <ListItemText primary="No subjects yet." />
+          </ListItem>
+        )}
+      </List>
+      <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+        <TextField
+          label="New subject"
+          value={newSubject}
+          onChange={e => setNewSubject(e.target.value)}
+          fullWidth
+        />
+        <Button onClick={addSubject} variant="contained">
+          Add
+        </Button>
+      </Box>
+      <Box sx={{ mt: 3 }}>
+        <Button onClick={onDelete} variant="contained" color="error">
+          Delete Student
+        </Button>
+      </Box>
+    </Paper>
   );
 }
-
-/* Simple inline styles to keep the example compact */
-const styles = {
-  app: {
-    fontFamily: "system-ui, Arial",
-    padding: 20,
-    maxWidth: 1000,
-    margin: "0 auto"
-  },
-  container: {
-    display: "flex",
-    gap: 20
-  },
-  left: {
-    width: 380,
-    border: "1px solid #ddd",
-    padding: 12,
-    borderRadius: 8
-  },
-  right: {
-    flex: 1,
-    border: "1px solid #ddd",
-    padding: 12,
-    borderRadius: 8
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    marginBottom: 12
-  },
-  input: {
-    padding: 8,
-    borderRadius: 6,
-    border: "1px solid #ccc"
-  },
-  inputSmall: {
-    padding: 6,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    marginRight: 8
-  },
-  button: {
-    padding: "8px 12px",
-    borderRadius: 6,
-    border: "none",
-    background: "#2563eb",
-    color: "white",
-    cursor: "pointer",
-    marginTop: 6
-  },
-  buttonDanger: {
-    padding: "8px 12px",
-    borderRadius: 6,
-    border: "none",
-    background: "#ef4444",
-    color: "white",
-    cursor: "pointer"
-  },
-  smallBtn: {
-    padding: "6px 8px",
-    borderRadius: 6,
-    border: "none",
-    background: "#6b7280",
-    color: "white",
-    cursor: "pointer",
-    marginLeft: 6
-  },
-  smallBtnDanger: {
-    padding: "6px 8px",
-    borderRadius: 6,
-    border: "none",
-    background: "#ef4444",
-    color: "white",
-    cursor: "pointer",
-    marginLeft: 6
-  },
-  list: {
-    listStyle: "none",
-    padding: 0,
-    marginTop: 8
-  },
-  listItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 8,
-    borderBottom: "1px solid #eee"
-  },
-  listButtons: {
-    display: "flex",
-    gap: 6
-  },
-  detailsRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8
-  },
-  label: {
-    width: 70,
-    fontWeight: 600
-  },
-  placeholder: {
-    color: "#666",
-    padding: 20
-  },
-  subjectItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6
-  },
-  smallText: {
-    fontSize: 13,
-    color: "#555"
-  }
-};
 
 export default Std;
